@@ -92,7 +92,7 @@ export class HomePageComponent implements OnInit {
     this.openSheetMusicDisplay = new OpenSheetMusicDisplay('osmdContainer');
     this.openSheetMusicDisplay.setOptions({
       backend: 'svg',
-      drawTitle: true,
+      drawTitle: false,
       coloringMode: this.checkboxColor ? 1 : 0,
       followCursor: true,
       useXMLMeasureNumbers: false,
@@ -189,7 +189,7 @@ export class HomePageComponent implements OnInit {
     this.checkboxColor = checked;
     this.openSheetMusicDisplay.setOptions({
       backend: 'svg',
-      drawTitle: true,
+      drawTitle: false,
       followCursor: true,
       coloringMode: this.checkboxColor ? 1 : 0,
       useXMLMeasureNumbers: false,
