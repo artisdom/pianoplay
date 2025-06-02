@@ -274,7 +274,7 @@ export class HomePageComponent implements OnInit {
         this.tempoInBPM /
         this.speedValue;
       setTimeout(() => {
-        if (!this.osmdEndReached(0)) this.osmdTextFeedback('&#x1F422;', 0, 40);
+        if (!this.osmdEndReached(0)) this.osmdTextFeedback('&#x1F331;', 0, 40);
         this.openSheetMusicDisplay.cursors[1].hide();
       }, timeout);
     } else {
@@ -637,7 +637,7 @@ export class HomePageComponent implements OnInit {
 
     // Key wrong pressed
     if (!this.notesService.getMapRequired().has(name)) {
-      this.osmdTextFeedback('&#x1F4A9;', 0, 20);
+      this.osmdTextFeedback('&#x1F308;', 0, 20);
     }
 
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
