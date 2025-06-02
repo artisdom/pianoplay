@@ -352,6 +352,12 @@ export class HomePageComponent implements OnInit {
       this.checkboxStaveUp,
       this.checkboxStaveDown
     );
+
+    // Turn on LED for all required notes
+    for (const [key] of this.notesService.getMapRequired()) {
+      this.TurnOnLedNote(parseInt(key) + 12);
+    }
+
     this.tempoInBPM = this.notesService.tempoInBPM;
     // Update keyboard
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
@@ -442,6 +448,12 @@ export class HomePageComponent implements OnInit {
       this.checkboxStaveDown,
       true
     );
+
+    // Turn on LED for all required notes
+    for (const [key] of this.notesService.getMapRequired()) {
+      this.TurnOnLedNote(parseInt(key) + 12);
+    }
+
     this.tempoInBPM = this.notesService.tempoInBPM;
     // Update keyboard
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
@@ -598,6 +610,22 @@ export class HomePageComponent implements OnInit {
     };
 
     this.midiInitDev(access);
+  }
+
+  // Turn on LED of note on Ouput MIDI Device
+  TurnOnLedNote(pitch: number): void {
+    const iter = this.midiOutputs.values();
+    for (let o = iter.next(); !o.done; o = iter.next()) {
+      o.value.send([0x90, pitch, 1], window.performance.now());
+    }
+  }
+
+  // Turn off LED of note on Ouput MIDI Device
+  TurnOffLedNote(pitch: number): void {
+    const iter = this.midiOutputs.values();
+    for (let o = iter.next(); !o.done; o = iter.next()) {
+      o.value.send([0x80, pitch, 0x00], window.performance.now());
+    }
   }
 
   // Press note on Ouput MIDI Device
