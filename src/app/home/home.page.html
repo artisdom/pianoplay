@@ -12,7 +12,7 @@
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button><br>
           <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
-          <ion-checkbox [(ngModel)]="checkboxKeyboard" color="dark"></ion-checkbox>
+          <ion-checkbox [(ngModel)]="checkboxKeyboard" color="dark" [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'keyboard'| translate}}</ion-label>
         </ion-col>
         <ion-col size="5">
