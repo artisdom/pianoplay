@@ -353,8 +353,16 @@ export class HomePageComponent implements OnInit {
       this.checkboxStaveDown
     );
 
-    // Turn on LED for all required notes
-    for (const [key] of this.notesService.getMapRequired()) {
+    // Track and Turn Off Expired LEDs: keep track of which notes were required in the previous step (e.g., using mapPrevRequired),
+    // and after updating mapRequired, turn off LEDs for any notes that were in mapPrevRequired but are no longer in mapRequired.
+    for (const [key] of this.notesService.getMapPrevRequired()) {
+      if (!this.notesService.getMapRequired().has(key)) {
+        this.TurnOffLedNote(parseInt(key) + 12);
+      }
+    }
+
+    // Turn on LED for all newly required notes
+    for (const [key] of this.notesService.getMapRequiredValue0()) {
       this.TurnOnLedNote(parseInt(key) + 12);
     }
 
@@ -449,8 +457,8 @@ export class HomePageComponent implements OnInit {
       true
     );
 
-    // Turn on LED for all required notes
-    for (const [key] of this.notesService.getMapRequired()) {
+    // Turn on LED for all newly required notes
+    for (const [key] of this.notesService.getMapRequiredValue0()) {
       this.TurnOnLedNote(parseInt(key) + 12);
     }
 
@@ -669,7 +677,15 @@ export class HomePageComponent implements OnInit {
     }
 
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
-    if (this.notesService.checkRequired()) this.osmdCursorPlayMoveNext();
+    if (this.notesService.checkRequired()) {
+
+      // All required notes has been pressed, turn off LED for all required notes
+      for (const [key] of this.notesService.getMapRequiredValue0()) {
+        this.TurnOffLedNote(parseInt(key) + 12);
+      }
+
+      this.osmdCursorPlayMoveNext();
+    }
   }
 
   // Midi input note released

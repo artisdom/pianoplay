@@ -31,6 +31,16 @@ export class NotesService {
     return this.mapRequired;
   }
 
+  getMapRequiredValue0(): Map<string, NoteObject> {
+    const result = new Map<string, NoteObject>();
+    for (const [key, noteObj] of this.mapRequired) {
+      if (noteObj.value === 0) {
+        result.set(key, noteObj);
+      }
+    }
+    return result;
+  }
+
   getMapPrevRequired(): Map<string, NoteObject> {
     return this.mapPrevRequired;
   }
