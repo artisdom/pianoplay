@@ -10,7 +10,7 @@
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPractice()">{{'start'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPlay()">{{'play'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button><br>
-          <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}}></ion-checkbox>
+          <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
           <ion-checkbox [(ngModel)]="checkboxKeyboard" color="dark"></ion-checkbox>
           <ion-label color="dark">{{'keyboard'| translate}}</ion-label>
@@ -35,10 +35,10 @@
           <img src="assets/i18n/gb.svg" class="flag" (click)="useLanguage('gb')">&nbsp;
           <img src="assets/i18n/fr.svg" class="flag" (click)="useLanguage('fr')">&nbsp;
           <img src="assets/i18n/de.svg" class="flag" (click)="useLanguage('de')">&nbsp;
-          <img src="assets/i18n/it.svg" class="flag" (click)="useLanguage('it')">&nbsp; 
+          <img src="assets/i18n/it.svg" class="flag" (click)="useLanguage('it')">&nbsp;
           <img src="assets/i18n/es.svg" class="flag" (click)="useLanguage('es')">&nbsp;
         </ion-col>
-        
+
       </ion-row>
     </ion-grid>
     <ion-grid *ngIf="isMobileLayout">
@@ -54,7 +54,7 @@
           <img src="assets/i18n/gb.svg" class="flag" (click)="useLanguage('gb')">&nbsp;
           <img src="assets/i18n/fr.svg" class="flag" (click)="useLanguage('fr')">&nbsp;
           <img src="assets/i18n/de.svg" class="flag" (click)="useLanguage('de')">&nbsp;
-          <img src="assets/i18n/it.svg" class="flag" (click)="useLanguage('it')">&nbsp; 
+          <img src="assets/i18n/it.svg" class="flag" (click)="useLanguage('it')">&nbsp;
           <img src="assets/i18n/es.svg" class="flag" (click)="useLanguage('es')">&nbsp;
         </ion-col>
       </ion-row>
@@ -67,12 +67,12 @@
     <ion-label *ngIf="fileLoadError" color="danger">
       <strong>{{'errorFile'| translate}}</strong><br><br>
     </ion-label>
-  </div> 
+  </div>
   <div style="background-color: white;" id="osmdContainer"></div>
   <div *ngIf="!fileLoaded" style="margin: 5%;">
     <ion-label *ngIf="!midiAvailable" color="danger">
       <strong>{{'errorMidi'| translate}}</strong><br><br>
-    </ion-label> 
+    </ion-label>
     <ion-label id="instructions">
     <strong>{{'openYourScore'| translate}}</strong><br><br>
     {{'instructions1'| translate}}<br>
@@ -93,7 +93,7 @@
 <ion-footer *ngIf="!isMobileLayout">
   <ion-toolbar>
     <app-piano-keyboard *ngIf="checkboxKeyboard"></app-piano-keyboard>
-    <ion-grid> 
+    <ion-grid>
     <ion-row>
       <ion-col size="3">
         <ion-checkbox disabled={{running}} [(ngModel)]="checkboxStaveUp" color="dark"></ion-checkbox>
@@ -121,7 +121,7 @@
 </ion-footer>
 <ion-footer *ngIf="isMobileLayout">
   <ion-toolbar>
-  <ion-grid> 
+  <ion-grid>
     <ion-row>
       <ion-col size="4">
         <ion-label>{{'midi'| translate}}: {{midiDevice}}</ion-label>

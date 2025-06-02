@@ -33,7 +33,7 @@ export class HomePageComponent implements OnInit {
   fileLoadError: boolean = false;
   fileLoaded: boolean = false;
   running: boolean = false;
-  checkboxColor: boolean = false;
+  checkboxColor: boolean = true;
   checkboxKeyboard: boolean = false;
   inputMeasure = { lower: 0, upper: 0 };
   inputMeasureRange = { lower: 0, upper: 0 };
