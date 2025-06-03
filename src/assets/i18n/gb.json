@@ -19,8 +19,8 @@
     "nextMeasure": "NEXT MEASURE",
     "stop": "STOP",
     "color": "Colour",
-    "upperStave": " Upper stave",
-    "lowerStave": " Lower stave",
+    "upperStave": " Upper",
+    "lowerStave": " Lower",
     "repeat": " Repeat",
     "autoplay": " Automatic play",
     "openYourEyes": "OPEN YOUR EYES",
@@ -34,5 +34,5 @@
     "errorMidi": ":( Web Midi not supported",
     "errorFile": ":( Error loading file",
     "keyboard": " Keyboard",
-    "openShippedScore": "Open server scores"
+    "openShippedScore": "server scores"
 }
