@@ -1,13 +1,14 @@
 // [PianoPlay](https://michaelecke.com/pianoplay) - Copyright (c) 2021 Rodrigo Jorge Vilar de Linares.
 
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { IonContent } from '@ionic/angular';
+import { IonContent, ModalController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { Piano } from '@tonejs/piano';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
 import { NotesService } from '../notes.service';
 import { PianoKeyboardComponent } from '../piano-keyboard/piano-keyboard.component';
+import { ShippedScoreSelectorComponent } from './shipped-score-selector.component';
 
 import MIDIAccess = WebMidi.MIDIAccess;
 import MIDIConnectionEvent = WebMidi.MIDIConnectionEvent;
@@ -71,7 +72,8 @@ export class HomePageComponent implements OnInit {
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
-    public translate: TranslateService
+    public translate: TranslateService,
+    private modalCtrl: ModalController
   ) {
     // create the piano and load 1 velocity steps to reduce memory consumption
     this.piano = new Piano({
@@ -717,6 +719,17 @@ export class HomePageComponent implements OnInit {
       this.wakeLockTimer = window.setTimeout(() => {
         if (this.wakeLockObj) this.wakeLockObj.release();
       }, 120000);
+    }
+  }
+
+  async openShippedScoreSelector() {
+    const modal = await this.modalCtrl.create({
+      component: ShippedScoreSelectorComponent
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      this.osmdLoadURL('assets/scores/' + data);
     }
   }
 }

@@ -1,0 +1,16 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Select a Shipped Score</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">Close</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-list *ngIf="scores.length">
+    <ion-item *ngFor="let score of scores" (click)="selectScore(score)">
+      {{ score }}
+    </ion-item>
+  </ion-list>
+  <ion-label *ngIf="!scores.length">No shipped scores found.</ion-label>
+</ion-content>

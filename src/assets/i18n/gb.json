@@ -33,5 +33,6 @@
     "deviation": "Deviation(<50ms)",
     "errorMidi": ":( Web Midi not supported",
     "errorFile": ":( Error loading file",
-    "keyboard": " Keyboard"
+    "keyboard": " Keyboard",
+    "openShippedScore": "Open server scores"
 }
