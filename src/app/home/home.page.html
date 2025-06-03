@@ -5,13 +5,11 @@
     <input class="ion-hide" #f type="file" (change)="osmdLoadFiles($event.target.files)">
     <ion-grid>
       <ion-row>
-        <ion-col size="4">
+
           <ion-button color="dark" size="small" disabled={{running}} (click)="f.click()">{{'open'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPractice()">{{'start'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPlay()">{{'play'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
-
-          <br>
 
           <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
@@ -21,9 +19,7 @@
           <ion-label color="dark">{{'upperStave'| translate}}</ion-label>
           <ion-checkbox disabled={{running}} [(ngModel)]="checkboxStaveDown" color="dark"></ion-checkbox>
           <ion-label color="dark">{{'lowerStave'| translate}}</ion-label>
-        </ion-col>
-        <ion-col size="5">
-        <ion-row>
+
           <img  src="assets/icon/music-box-multiple-outline.svg" style="width:48px;height:48px;">
           <ion-input [(ngModel)]="inputMeasure.lower" (change)="updateLowerMeasure($event.target.value)"></ion-input>
           <ion-input [(ngModel)]="inputMeasure.upper" (change)="updateUpperMeasure($event.target.value)"></ion-input>
@@ -35,8 +31,6 @@
           <ion-input [(ngModel)]="zoomText" (change)="updateZoom($event.target.value)"></ion-input>
           <img src="assets/icon/metronome.svg" style="width:48px;height:48px;">
           <ion-input [(ngModel)]="speedText" (change)="updateSpeed($event.target.value)"></ion-input>
-        </ion-row>
-        </ion-col>
 
           <ion-label>{{'midi'| translate}}: {{midiDevice}}</ion-label>
       </ion-row>
