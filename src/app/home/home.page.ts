@@ -40,8 +40,8 @@ export class HomePageComponent implements OnInit {
   repeatValue: number = 0;
   repeatText: string = '0';
   repeatCfg: number = 0;
-  zoomValue: number = 1;
-  zoomText: string = '100%';
+  zoomValue: number = 1.2;
+  zoomText: string = '120%';
   speedValue: number = 1;
   speedText: string = '100%';
 
