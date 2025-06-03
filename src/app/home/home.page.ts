@@ -104,7 +104,7 @@ export class HomePageComponent implements OnInit {
     // Adjust zoom for mobile devices
     if (window.innerWidth <= 991) {
       this.isMobileLayout = true;
-      this.zoomValue = 0.7;
+      this.zoomValue = 1;
       this.zoomText = this.zoomValue * 100 + '%';
       this.openSheetMusicDisplay.zoom = this.zoomValue;
     }
