@@ -828,41 +828,78 @@ export class HomePageComponent implements OnInit {
         optionalServices: ['03b80e5a-ede8-4b33-a751-6ce34ec4c700']
       });
       this.bleMidiDevice = device;
-      this.bleMidiServer = await device.gatt?.connect() || null;
-      if (!this.bleMidiServer) throw new Error('No GATT server');
-      const service = await this.bleMidiServer.getPrimaryService('03b80e5a-ede8-4b33-a751-6ce34ec4c700');
-      this.bleMidiCharacteristic = await service.getCharacteristic('7772e5db-3868-4112-a1a9-f2669d106bf3');
-      await this.bleMidiCharacteristic.startNotifications();
-      this.bleMidiCharacteristic.addEventListener('characteristicvaluechanged', this.onBleMidiMessage.bind(this));
-      this.bleMidiConnected = true;
-      this.midiDevice = 'GZUT-MIDI (BLE)';
-      this.midiAvailable = true;
-      this.changeRef.detectChanges();
+      // Add disconnect event listener ONCE
+      device.removeEventListener('gattserverdisconnected', this.handleBleMidiDisconnectBound);
+      this.handleBleMidiDisconnectBound = this.handleBleMidiDisconnect.bind(this);
+      device.addEventListener('gattserverdisconnected', this.handleBleMidiDisconnectBound);
+      await this.connectGattServer();
     } catch (e) {
       alert('BLE MIDI connection failed: ' + e);
       this.bleMidiConnected = false;
     }
   }
 
-  onBleMidiMessage(event: any) {
-    const value = event.target.value;
-    // BLE MIDI spec: skip header, parse MIDI message(s)
-    // Usually, first two bytes are timestamp, then MIDI message(s)
-    // For simplicity, just forward bytes after first two bytes
-    if (value.byteLength > 2) {
-      // e.g. [timestamp, timestamp, status, data1, data2]
-      const midiData = [];
-      for (let i = 2; i < value.byteLength; ++i) midiData.push(value.getUint8(i));
-      // Only handle note on/off for now
-      const cmd = midiData[0] >> 4;
-      let pitch = midiData[1] || 0;
-      let velocity = midiData[2] || 0;
-      if (cmd === 8 || (cmd === 9 && velocity === 0)) {
-        this.midiNoteOff(Date.now() - this.timePlayStart, pitch);
-      } else if (cmd === 9) {
-        this.midiNoteOn(Date.now() - this.timePlayStart, pitch);
-      }
+  // Helper to connect GATT server and set up characteristic/notifications
+  private async connectGattServer() {
+    if (!this.bleMidiDevice) return;
+    try {
+      this.bleMidiServer = await this.bleMidiDevice.gatt?.connect() || null;
+      if (!this.bleMidiServer) throw new Error('No GATT server');
+      const service = await this.bleMidiServer.getPrimaryService('03b80e5a-ede8-4b33-a751-6ce34ec4c700');
+      this.bleMidiCharacteristic = await service.getCharacteristic('7772e5db-3868-4112-a1a9-f2669d106bf3');
+      await this.bleMidiCharacteristic.startNotifications();
+      this.bleMidiCharacteristic.removeEventListener('characteristicvaluechanged', this.onBleMidiMessageBound);
+      this.onBleMidiMessageBound = this.onBleMidiMessage.bind(this);
+      this.bleMidiCharacteristic.addEventListener('characteristicvaluechanged', this.onBleMidiMessageBound);
+      this.bleMidiConnected = true;
+      this.midiDevice = 'GZUT-MIDI (BLE)';
+      this.midiAvailable = true;
+      this.changeRef.detectChanges();
+      this.showUserMessage('BLE MIDI connected.');
+    } catch (e) {
+      this.bleMidiConnected = false;
+      this.showUserMessage('BLE MIDI connection failed: ' + e);
+      throw e;
     }
+  }
+
+  // BLE disconnect handler (bound in connectBleMidi)
+  private handleBleMidiDisconnectBound: any = null;
+  private onBleMidiMessageBound: any = null;
+  private bleReconnectTries: number = 0;
+  private bleReconnectMaxTries: number = 5;
+  private bleReconnectDelay: number = 2000;
+  private bleReconnectTimer: any = null;
+
+  private handleBleMidiDisconnect() {
+    this.bleMidiConnected = false;
+    this.bleMidiServer = null;
+    this.bleMidiCharacteristic = null;
+    this.showUserMessage('BLE MIDI disconnected. Attempting to reconnect...');
+    this.tryReconnectBleMidi();
+  }
+
+  private async tryReconnectBleMidi() {
+    if (!this.bleMidiDevice) return;
+    if (this.bleReconnectTries >= this.bleReconnectMaxTries) {
+      this.showUserMessage('BLE MIDI reconnection failed after several attempts. Please reconnect manually.');
+      return;
+    }
+    this.bleReconnectTries++;
+    try {
+      await this.connectGattServer();
+      this.bleReconnectTries = 0;
+      this.showUserMessage('BLE MIDI reconnected.');
+    } catch (e) {
+      this.bleReconnectTimer = setTimeout(() => this.tryReconnectBleMidi(), this.bleReconnectDelay * this.bleReconnectTries);
+    }
+  }
+
+  // Show user feedback (can be improved to use a toast/snackbar)
+  private showUserMessage(msg: string) {
+    // For now, use alert, but can be replaced with a better UI feedback
+    // alert(msg);
+    console.log(msg);
   }
 
   // Override MIDI send to use BLE if connected, with queue
@@ -872,6 +909,9 @@ export class HomePageComponent implements OnInit {
       const msg = new Uint8Array([0x80, 0x80, ...data]);
       this.bleMidiWriteQueue.push(msg);
       this.processBleMidiQueue();
+    } else {
+      // Optionally, drop or queue until reconnected
+      this.showUserMessage('BLE MIDI not connected. Message dropped.');
     }
   }
 
@@ -881,16 +921,39 @@ export class HomePageComponent implements OnInit {
     if (!msg) return;
     this.bleMidiWriting = true;
     try {
-      // print a log of the message in hex format
-      // console.log('Sending BLE MIDI message (hex):', Array.from(msg).map(b => b.toString(16).padStart(2, '0')).join(' '));
       await this.bleMidiCharacteristic.writeValue(msg);
     } catch (e) {
-      console.error('BLE MIDI write error:', e);
+      this.showUserMessage('BLE MIDI write error: ' + e);
+      // If GATT disconnected, trigger disconnect handler
+      if (this.bleMidiDevice && this.bleMidiDevice.gatt && !this.bleMidiDevice.gatt.connected) {
+        this.handleBleMidiDisconnect();
+      }
     } finally {
       this.bleMidiWriting = false;
       if (this.bleMidiWriteQueue.length > 0) {
         this.processBleMidiQueue();
       }
+    }
+  }
+
+  // Handle incoming BLE MIDI messages
+  private onBleMidiMessage(event: Event) {
+    const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
+    if (!value) return;
+    // BLE MIDI spec: skip first 2 bytes (timestamp), rest is MIDI data
+    const data = new Uint8Array(value.buffer);
+    if (data.length < 3) return;
+    // Forward to MIDI input handler (simulate USB MIDI input)
+    // Example: [0x80, 0x80, 0x90, pitch, velocity]
+    const midiData = data.slice(2);
+    // Only handle note on/off for now
+    const cmd = midiData[0] & 0xf0;
+    const pitch = midiData[1];
+    const velocity = midiData[2];
+    if (cmd === 0x90 && velocity > 0) {
+      this.midiNoteOn(performance.now(), pitch);
+    } else if ((cmd === 0x80) || (cmd === 0x90 && velocity === 0)) {
+      this.midiNoteOff(performance.now(), pitch);
     }
   }
 }
