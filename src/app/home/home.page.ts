@@ -785,15 +785,35 @@ export class HomePageComponent implements OnInit {
 
   // Refresh wakelock for two minutes
   refreshWakeLock(): void {
-    if (navigator.wakeLock) {
+    if (!('wakeLock' in navigator)) return;
+    // Only request wake lock if page is visible
+    if (document.visibilityState !== 'visible') {
+      // Optionally, set up a listener to re-acquire when visible
+      if (!this._wakeLockVisibilityHandler) {
+        this._wakeLockVisibilityHandler = () => {
+          if (document.visibilityState === 'visible') {
+            this.refreshWakeLock();
+          }
+        };
+        document.addEventListener('visibilitychange', this._wakeLockVisibilityHandler);
+      }
+      return;
+    }
+    // Remove the visibilitychange handler if present
+    if (this._wakeLockVisibilityHandler) {
+      document.removeEventListener('visibilitychange', this._wakeLockVisibilityHandler);
+      this._wakeLockVisibilityHandler = null;
+    }
+    try {
       if (!this.wakeLockObj) {
         navigator.wakeLock.request('screen').then((wakeLock) => {
           this.wakeLockObj = wakeLock;
           this.wakeLockObj.addEventListener('release', () => {
             this.wakeLockObj = undefined;
           });
-          //})
-          //.catch((err) => {
+        }).catch((err) => {
+          // NotAllowedError: The requesting page is not visible
+          // Just ignore, will retry on visibilitychange
           // console.log('wakelock failed to acquire: ' + err.message);
         });
       }
@@ -802,8 +822,13 @@ export class HomePageComponent implements OnInit {
       this.wakeLockTimer = window.setTimeout(() => {
         if (this.wakeLockObj) this.wakeLockObj.release();
       }, 120000);
+    } catch (err) {
+      // Ignore errors
     }
   }
+
+  // Add a private property for the visibility handler
+  private _wakeLockVisibilityHandler: (() => void) | null = null;
 
   async openShippedScoreSelector() {
     const modal = await this.modalCtrl.create({
