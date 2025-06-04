@@ -16,6 +16,54 @@ import MIDIMessageEvent = WebMidi.MIDIMessageEvent;
 import MIDIInput = WebMidi.MIDIInput;
 import MIDIOutput = WebMidi.MIDIOutput;
 
+// TypeScript declarations for Web Bluetooth API
+// These are not in standard TypeScript DOM lib yet
+// @ts-ignore
+interface BluetoothDevice extends EventTarget {
+  gatt?: BluetoothRemoteGATTServer;
+  id: string;
+  name?: string;
+  watchingAdvertisements: boolean;
+  // ...other properties...
+}
+// @ts-ignore
+interface BluetoothRemoteGATTServer {
+  device: BluetoothDevice;
+  connected: boolean;
+  connect(): Promise<BluetoothRemoteGATTServer>;
+  disconnect(): void;
+  getPrimaryService(service: BluetoothServiceUUID): Promise<BluetoothRemoteGATTService>;
+}
+// @ts-ignore
+interface BluetoothRemoteGATTService {
+  getCharacteristic(characteristic: BluetoothCharacteristicUUID): Promise<BluetoothRemoteGATTCharacteristic>;
+}
+// @ts-ignore
+interface BluetoothRemoteGATTCharacteristic extends EventTarget {
+  uuid: string;
+  startNotifications(): Promise<BluetoothRemoteGATTCharacteristic>;
+  writeValue(value: BufferSource): Promise<void>;
+  addEventListener(type: 'characteristicvaluechanged', listener: (this: this, ev: Event) => any): void;
+  value: DataView;
+}
+// @ts-ignore
+interface Navigator {
+  bluetooth: {
+    requestDevice(options: any): Promise<BluetoothDevice>;
+  };
+}
+
+type BluetoothServiceUUID = string | number;
+type BluetoothCharacteristicUUID = string | number;
+// Patch navigator.bluetooth for TypeScript
+declare global {
+  interface Navigator {
+    bluetooth: {
+      requestDevice(options: any): Promise<BluetoothDevice>;
+    };
+  }
+}
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -68,6 +116,16 @@ export class HomePageComponent implements OnInit {
   lang: string = 'gb';
   // tonejs/piano
   piano: Piano;
+
+  // BLE MIDI state
+  bleMidiDevice: BluetoothDevice | null = null;
+  bleMidiServer: BluetoothRemoteGATTServer | null = null;
+  bleMidiCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  bleMidiConnected: boolean = false;
+
+  // BLE MIDI write queue
+  private bleMidiWriteQueue: Uint8Array[] = [];
+  private bleMidiWriting: boolean = false;
 
   constructor(
     private notesService: NotesService,
@@ -624,6 +682,10 @@ export class HomePageComponent implements OnInit {
 
   // Turn on LED of note on Ouput MIDI Device
   TurnOnLedNote(pitch: number): void {
+    if (this.bleMidiConnected) {
+      this.sendMidiBle([0x90, pitch, 1]);
+      return;
+    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x90, pitch, 1], window.performance.now());
@@ -632,6 +694,10 @@ export class HomePageComponent implements OnInit {
 
   // Turn off LED of note on Ouput MIDI Device
   TurnOffLedNote(pitch: number): void {
+    if (this.bleMidiConnected) {
+      this.sendMidiBle([0x80, pitch, 0x00]);
+      return;
+    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x80, pitch, 0x00], window.performance.now());
@@ -641,6 +707,13 @@ export class HomePageComponent implements OnInit {
   // Press note on Ouput MIDI Device
   midiPressNote(pitch: number, velocity: number): void {
     this.mapNotesAutoPressed.set((pitch - 12).toFixed(), 1);
+    if (this.bleMidiConnected) {
+      this.sendMidiBle([0x90, pitch, velocity]);
+      setTimeout(() => {
+        this.midiNoteOn(Date.now() - this.timePlayStart, pitch);
+      }, 0);
+      return;
+    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x90, pitch, velocity], window.performance.now());
@@ -656,6 +729,13 @@ export class HomePageComponent implements OnInit {
   // Release note on Ouput MIDI Device
   midiReleaseNote(pitch: number): void {
     this.mapNotesAutoPressed.delete((pitch - 12).toFixed());
+    if (this.bleMidiConnected) {
+      this.sendMidiBle([0x80, pitch, 0x00]);
+      setTimeout(() => {
+        this.midiNoteOff(Date.now() - this.timePlayStart, pitch);
+      }, 0);
+      return;
+    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x80, pitch, 0x00], window.performance.now());
@@ -730,6 +810,84 @@ export class HomePageComponent implements OnInit {
     const { data } = await modal.onWillDismiss();
     if (data) {
       this.osmdLoadURL('assets/scores/' + data);
+    }
+  }
+
+  async connectBleMidi() {
+    if (!('bluetooth' in navigator)) {
+      alert('Web Bluetooth API is not available in this browser. Please use Chrome or Edge on HTTPS.');
+      this.bleMidiConnected = false;
+      return;
+    }
+    try {
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ name: 'GZUT-MIDI' }],
+        optionalServices: ['03b80e5a-ede8-4b33-a751-6ce34ec4c700']
+      });
+      this.bleMidiDevice = device;
+      this.bleMidiServer = await device.gatt?.connect() || null;
+      if (!this.bleMidiServer) throw new Error('No GATT server');
+      const service = await this.bleMidiServer.getPrimaryService('03b80e5a-ede8-4b33-a751-6ce34ec4c700');
+      this.bleMidiCharacteristic = await service.getCharacteristic('7772e5db-3868-4112-a1a9-f2669d106bf3');
+      await this.bleMidiCharacteristic.startNotifications();
+      this.bleMidiCharacteristic.addEventListener('characteristicvaluechanged', this.onBleMidiMessage.bind(this));
+      this.bleMidiConnected = true;
+      this.midiDevice = 'GZUT-MIDI (BLE)';
+      this.midiAvailable = true;
+      this.changeRef.detectChanges();
+    } catch (e) {
+      alert('BLE MIDI connection failed: ' + e);
+      this.bleMidiConnected = false;
+    }
+  }
+
+  onBleMidiMessage(event: any) {
+    const value = event.target.value;
+    // BLE MIDI spec: skip header, parse MIDI message(s)
+    // Usually, first two bytes are timestamp, then MIDI message(s)
+    // For simplicity, just forward bytes after first two bytes
+    if (value.byteLength > 2) {
+      // e.g. [timestamp, timestamp, status, data1, data2]
+      const midiData = [];
+      for (let i = 2; i < value.byteLength; ++i) midiData.push(value.getUint8(i));
+      // Only handle note on/off for now
+      const cmd = midiData[0] >> 4;
+      let pitch = midiData[1] || 0;
+      let velocity = midiData[2] || 0;
+      if (cmd === 8 || (cmd === 9 && velocity === 0)) {
+        this.midiNoteOff(Date.now() - this.timePlayStart, pitch);
+      } else if (cmd === 9) {
+        this.midiNoteOn(Date.now() - this.timePlayStart, pitch);
+      }
+    }
+  }
+
+  // Override MIDI send to use BLE if connected, with queue
+  sendMidiBle(data: number[]) {
+    if (this.bleMidiConnected && this.bleMidiCharacteristic) {
+      // BLE MIDI spec: prepend 0x80, 0x80 as timestamp (no running status)
+      const msg = new Uint8Array([0x80, 0x80, ...data]);
+      this.bleMidiWriteQueue.push(msg);
+      this.processBleMidiQueue();
+    }
+  }
+
+  private async processBleMidiQueue() {
+    if (this.bleMidiWriting || !this.bleMidiConnected || !this.bleMidiCharacteristic) return;
+    const msg = this.bleMidiWriteQueue.shift();
+    if (!msg) return;
+    this.bleMidiWriting = true;
+    try {
+      // print a log of the message in hex format
+      // console.log('Sending BLE MIDI message (hex):', Array.from(msg).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      await this.bleMidiCharacteristic.writeValue(msg);
+    } catch (e) {
+      console.error('BLE MIDI write error:', e);
+    } finally {
+      this.bleMidiWriting = false;
+      if (this.bleMidiWriteQueue.length > 0) {
+        this.processBleMidiQueue();
+      }
     }
   }
 }

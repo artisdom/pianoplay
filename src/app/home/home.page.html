@@ -11,6 +11,7 @@
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPlay()">{{'play'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
+          <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>
 
           <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
