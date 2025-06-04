@@ -127,6 +127,9 @@ export class HomePageComponent implements OnInit {
   private bleMidiWriteQueue: Uint8Array[] = [];
   private bleMidiWriting: boolean = false;
 
+  // Toolbar visibility
+  showToolbar: boolean = true;
+
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
