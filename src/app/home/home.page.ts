@@ -416,18 +416,10 @@ export class HomePageComponent implements OnInit {
       this.checkboxStaveDown
     );
 
-    // Track and Turn Off Expired LEDs: keep track of which notes were required in the previous step (e.g., using mapPrevRequired),
-    // and after updating mapRequired, turn off LEDs for any notes that were in mapPrevRequired but are no longer in mapRequired.
-    for (const [key] of this.notesService.getMapPrevRequired()) {
-      if (!this.notesService.getMapRequired().has(key)) {
-        this.TurnOffLedNote(parseInt(key) + 12);
-      }
-    }
+    this.turnOffExpiredLeds();
 
     // Turn on LED for all newly required notes
-    for (const [key] of this.notesService.getMapRequiredValue0()) {
-      this.TurnOnLedNote(parseInt(key) + 12);
-    }
+    this.turnOnAllRequiredLeds();
 
     this.tempoInBPM = this.notesService.tempoInBPM;
     // Update keyboard
@@ -521,9 +513,7 @@ export class HomePageComponent implements OnInit {
     );
 
     // Turn on LED for all newly required notes
-    for (const [key] of this.notesService.getMapRequiredValue0()) {
-      this.TurnOnLedNote(parseInt(key) + 12);
-    }
+    this.turnOnAllRequiredLeds();
 
     this.tempoInBPM = this.notesService.tempoInBPM;
     // Update keyboard
@@ -685,10 +675,6 @@ export class HomePageComponent implements OnInit {
 
   // Turn on LED of note on Ouput MIDI Device
   TurnOnLedNote(pitch: number): void {
-    if (this.bleMidiConnected) {
-      this.sendMidiBle([0x90, pitch, 1]);
-      return;
-    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x90, pitch, 1], window.performance.now());
@@ -697,13 +683,79 @@ export class HomePageComponent implements OnInit {
 
   // Turn off LED of note on Ouput MIDI Device
   TurnOffLedNote(pitch: number): void {
-    if (this.bleMidiConnected) {
-      this.sendMidiBle([0x80, pitch, 0x00]);
-      return;
-    }
     const iter = this.midiOutputs.values();
     for (let o = iter.next(); !o.done; o = iter.next()) {
       o.value.send([0x80, pitch, 0x00], window.performance.now());
+    }
+  }
+
+  // Shared function to turn on LED for all newly required notes
+  private turnOnAllRequiredLeds(): void {
+    if (this.bleMidiConnected) {
+      // Collect all required notes and send as a single BLE message
+      const keys = Array.from(this.notesService.getMapRequired().keys()).map(([key]) => parseInt(key) + 12);
+      if (keys.length > 0) {
+        const midiData: number[] = [0x90];
+
+        // Each note-on: [note, 1]
+        for (const note of keys) {
+          midiData.push(note, 1);
+        }
+        this.sendMidiBle(midiData);
+      }
+    } else { // Turn on all required notes via USB MIDI connection
+      for (const [key] of this.notesService.getMapRequiredValue0()) {
+        this.TurnOnLedNote(parseInt(key) + 12);
+      }
+    }
+  }
+
+  // Shared function to turn off all required LEDs
+  private turnOffAllRequiredLeds(): void {
+    if (this.bleMidiConnected) {
+      // Collect all required notes and send as a single BLE message
+      const keys = Array.from(this.notesService.getMapRequiredValue0()).map(([key]) => parseInt(key) + 12);
+      if (keys.length > 0) {
+        const midiData: number[] = [0x80];
+
+        // Each note-on: [note, 0]
+        for (const note of keys) {
+          midiData.push(note, 0x00);
+        }
+
+        this.sendMidiBle(midiData);
+      }
+    } else {
+      for (const [key] of this.notesService.getMapRequiredValue0()) {
+        this.TurnOffLedNote(parseInt(key) + 12);
+      }
+    }
+  }
+
+  // Shared function to turn off LEDs for notes that are no longer required
+  private turnOffExpiredLeds(): void {
+    if (this.bleMidiConnected) {
+      // Collect all expired notes and send as a single BLE message
+      const expiredKeys = Array.from(this.notesService.getMapPrevRequired())
+        .filter(([key]) => !this.notesService.getMapRequired().has(key))
+        .map(([key]) => parseInt(key) + 12);
+
+      if (expiredKeys.length > 0) {
+        const midiData: number[] = [0x80];
+
+        // Each note-off: [note, 0x00]
+        for (const note of expiredKeys) {
+          midiData.push(note, 0x00);
+        }
+
+        this.sendMidiBle(midiData);
+      }
+    } else { // Turn off all expired notes via USB MIDI connection
+      for (const [key] of this.notesService.getMapPrevRequired()) {
+        if (!this.notesService.getMapRequired().has(key)) {
+          this.TurnOffLedNote(parseInt(key) + 12);
+        }
+      }
     }
   }
 
@@ -765,9 +817,7 @@ export class HomePageComponent implements OnInit {
     if (this.notesService.checkRequired()) {
 
       // All required notes has been pressed, turn off LED for all required notes
-      for (const [key] of this.notesService.getMapRequiredValue0()) {
-        this.TurnOffLedNote(parseInt(key) + 12);
-      }
+      this.turnOffAllRequiredLeds();
 
       this.osmdCursorPlayMoveNext();
     }
