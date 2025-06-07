@@ -7,8 +7,8 @@
       <ion-row>
 
           <ion-button color="dark" size="small" [disabled]="running" (click)="fileInput.click()">{{'open'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPractice()">{{'start'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="osmdPlay()">{{'play'| translate}}</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; osmdPractice()">{{'start'| translate}}</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; osmdPlay()">{{'play'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
           <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>
