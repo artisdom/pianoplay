@@ -145,23 +145,39 @@ export class NotesService {
   }
 
   // Update note status for piano keyboard
-  autoplayRequired(midiPress: (note: number, velocity: number) => void, midiRelease: (note: number) => void): void {
-    // Release notes no longer required
+  // Now always calls midiPress/midiRelease with arrays of notes
+  // HomePageComponent will detect BLE and handle batching
+  // For USB, the original per-note logic is used
+  // For BLE, midiPress/midiRelease will be called with arrays of notes
+  // (see HomePageComponent for BLE/USB dispatch)
+  autoplayRequired(
+    midiPress: (notes: number[], velocities: number[]) => void,
+    midiRelease: (notes: number[]) => void
+  ): void {
+    // Collect notes to release and notes to press
+    const notesToRelease: number[] = [];
     for (const [key] of this.mapPressed) {
       if (!this.mapRequired.has(key)) {
-        midiRelease(parseInt(key) + 12);
+        notesToRelease.push(parseInt(key) + 12);
       }
     }
-
-    // Press new notes
+    const notesToPress: number[] = [];
+    const velocities: number[] = [];
     for (const [key, value] of this.mapRequired) {
       if (value.value === 0) {
         // If already pressed, release first
         if (this.mapPressed.has(key)) {
-          midiRelease(parseInt(key) + 12);
+          notesToRelease.push(parseInt(key) + 12);
         }
-        midiPress(parseInt(key) + 12, 60);
+        notesToPress.push(parseInt(key) + 12);
+        velocities.push(60); // Default velocity, or customize per note if needed
       }
+    }
+    if (notesToRelease.length > 0) {
+      midiRelease(notesToRelease);
+    }
+    if (notesToPress.length > 0) {
+      midiPress(notesToPress, velocities);
     }
   }
 }

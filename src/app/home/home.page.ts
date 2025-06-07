@@ -442,9 +442,7 @@ export class HomePageComponent implements OnInit {
     this.osmdShowFeedback();
     this.running = false;
     this.notesService.clear();
-    for (const [key] of this.mapNotesAutoPressed) {
-      this.midiReleaseNote(parseInt(key) + 12);
-    }
+    this.releaseAllAutoPressedNotes();
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
   }
 
@@ -493,9 +491,7 @@ export class HomePageComponent implements OnInit {
     if (this.repeatValue == this.repeatCfg) {
       this.notesService.clear();
       // free auto pressed notes
-      for (const [key] of this.mapNotesAutoPressed) {
-        this.midiReleaseNote(parseInt(key) + 12);
-      }
+      this.releaseAllAutoPressedNotes();
     }
 
     this.osmdHideFeedback();
@@ -759,46 +755,88 @@ export class HomePageComponent implements OnInit {
     }
   }
 
-  // Press note on Ouput MIDI Device
-  midiPressNote(pitch: number, velocity: number): void {
-    this.mapNotesAutoPressed.set((pitch - 12).toFixed(), 1);
-    if (this.bleMidiConnected) {
-      this.sendMidiBle([0x90, pitch, velocity]);
-      setTimeout(() => {
-        this.midiNoteOn(Date.now() - this.timePlayStart, pitch);
-      }, 0);
+  // Press note(s) on Output MIDI Device
+  midiPressNote(pitches: number[], velocities: number[]): void {
+    // If no velocities provided, default to 60 for all notes
+    const vels = velocities && velocities.length === pitches.length ? velocities : pitches.map(() => 60);
+
+    if (this.bleMidiConnected && pitches.length > 0) {
+      // BLE batch: send all notes in one message
+      const midiData: number[] = [0x90];
+
+      for (let i = 0; i < pitches.length; i++) {
+        midiData.push(pitches[i], vels[i]);
+        this.mapNotesAutoPressed.set((pitches[i] - 12).toFixed(), 1);
+        this.piano.keyDown({ midi: pitches[i] });
+      }
+
+      this.sendMidiBle(midiData);
+
+      // Simulate input for all notes
+      for (let i = 0; i < pitches.length; i++) {
+        setTimeout(() => {
+          this.midiNoteOn(Date.now() - this.timePlayStart, pitches[i]);
+        }, 0);
+      }
       return;
     }
-    const iter = this.midiOutputs.values();
-    for (let o = iter.next(); !o.done; o = iter.next()) {
-      o.value.send([0x90, pitch, velocity], window.performance.now());
-    }
-    setTimeout(() => {
-      this.midiNoteOn(Date.now() - this.timePlayStart, pitch);
-    }, 0);
-    if (this.midiOutputs.values().next().done) {
-      this.piano.keyDown({ midi: pitch });
+
+    // USB MIDI connection: send per-note
+    for (let i = 0; i < pitches.length; i++) {
+      const note = pitches[i];
+      const velocity = vels[i];
+      this.mapNotesAutoPressed.set((note - 12).toFixed(), 1);
+
+      const iter = this.midiOutputs.values();
+      for (let o = iter.next(); !o.done; o = iter.next()) {
+        o.value.send([0x90, note, velocity], window.performance.now());
+      }
+
+      setTimeout(() => {
+        this.midiNoteOn(Date.now() - this.timePlayStart, note);
+      }, 0);
+
+      if (this.midiOutputs.values().next().done) {
+        this.piano.keyDown({ midi: note });
+      }
     }
   }
 
-  // Release note on Ouput MIDI Device
-  midiReleaseNote(pitch: number): void {
-    this.mapNotesAutoPressed.delete((pitch - 12).toFixed());
-    if (this.bleMidiConnected) {
-      this.sendMidiBle([0x80, pitch, 0x00]);
-      setTimeout(() => {
-        this.midiNoteOff(Date.now() - this.timePlayStart, pitch);
-      }, 0);
+  // Release note(s) on Output MIDI Device
+  midiReleaseNote(pitch: number[]): void {
+    if (pitch.length > 0 && this.bleMidiConnected) {
+      // BLE batch: send all notes in one message
+      const midiData: number[] = [0x80];
+      for (const note of pitch) {
+        midiData.push(note, 0x00);
+        this.mapNotesAutoPressed.delete((note - 12).toFixed());
+        this.piano.keyUp({ midi: note });
+      }
+      this.sendMidiBle(midiData);
+      // Simulate input for all notes
+      for (const note of pitch) {
+        setTimeout(() => {
+          this.midiNoteOff(Date.now() - this.timePlayStart, note);
+        }, 0);
+      }
       return;
     }
-    const iter = this.midiOutputs.values();
-    for (let o = iter.next(); !o.done; o = iter.next()) {
-      o.value.send([0x80, pitch, 0x00], window.performance.now());
+
+    // USB MIDI connection: send per-note
+    for (const note of pitch) {
+      this.mapNotesAutoPressed.delete((note - 12).toFixed());
+
+      const iter = this.midiOutputs.values();
+      for (let o = iter.next(); !o.done; o = iter.next()) {
+        o.value.send([0x80, note, 0x00], window.performance.now());
+      }
+
+      setTimeout(() => {
+        this.midiNoteOff(Date.now() - this.timePlayStart, note);
+      }, 0);
+
+      if (this.midiOutputs.values().next().done) this.piano.keyUp({ midi: note });
     }
-    setTimeout(() => {
-      this.midiNoteOff(Date.now() - this.timePlayStart, pitch);
-    }, 0);
-    if (this.midiOutputs.values().next().done) this.piano.keyUp({ midi: pitch });
   }
 
   // Midi input note pressed
@@ -1029,6 +1067,17 @@ export class HomePageComponent implements OnInit {
       this.midiNoteOn(performance.now(), pitch);
     } else if ((cmd === 0x80) || (cmd === 0x90 && velocity === 0)) {
       this.midiNoteOff(performance.now(), pitch);
+    }
+  }
+
+  // Shared function to release all auto pressed notes
+  private releaseAllAutoPressedNotes(): void {
+    const notes: number[] = [];
+    for (const [key] of this.mapNotesAutoPressed) {
+      notes.push(parseInt(key) + 12);
+    }
+    if (notes.length > 0) {
+      this.midiReleaseNote(notes);
     }
   }
 }
