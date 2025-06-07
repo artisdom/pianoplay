@@ -60,7 +60,7 @@ export class ShippedScoreSelectorComponent implements OnInit {
     return Object.keys(groups).sort().map(group => ({
       group,
       scores: groups[group].sort((a, b) => this.getScoreName(a).localeCompare(this.getScoreName(b))),
-      open: false
+      open: true
     }));
   }
 
