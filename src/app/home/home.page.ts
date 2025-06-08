@@ -135,6 +135,10 @@ export class HomePageComponent implements OnInit {
   // Shipped scores
   shippedScores: string[] = [];
 
+  // Play all random
+  private playAllRandomActive = false;
+  private skipPlayAllRandom = false;
+
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
@@ -1143,5 +1147,49 @@ export class HomePageComponent implements OnInit {
     if (this.content) {
       this.content.scrollToTop();
     }
+  }
+
+  nextPlayAllRandom() {
+    this.skipPlayAllRandom = true;
+  }
+
+  async playAllRandom() {
+    if (this.playAllRandomActive || !this.shippedScores.length) return;
+    this.playAllRandomActive = true;
+    this.skipPlayAllRandom = false;
+    const shuffled = this.shippedScores.slice().sort(() => Math.random() - 0.5);
+    for (const score of shuffled) {
+      await this.playSingleScore(score);
+      if (!this.playAllRandomActive) break;
+      this.skipPlayAllRandom = false;
+    }
+    this.playAllRandomActive = false;
+  }
+
+  async playSingleScore(score: string): Promise<void> {
+    return new Promise((resolve) => {
+      this.osmdLoadURL('assets/scores/' + score);
+      // Wait for rendering and then start playback
+      setTimeout(() => {
+        this.osmdPlay();
+
+        let duration = 1000; // Check whether finished per second
+
+        // Poll for running=false (playback finished), or fallback to timeout or skip
+        const checkDone = () => {
+          if (!this.playAllRandomActive) return resolve();
+          if (this.skipPlayAllRandom) return resolve();
+          if (!this.running) return resolve();
+          setTimeout(checkDone, duration);
+        };
+        setTimeout(checkDone, duration);
+      }, 1000);
+    });
+  }
+
+  // Optionally, add a stop method
+  stopPlayAllRandom() {
+    this.playAllRandomActive = false;
+    this.osmdCursorStop();
   }
 }

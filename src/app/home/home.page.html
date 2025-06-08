@@ -14,6 +14,9 @@
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
           <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>
+          <ion-button color="tertiary" size="small" (click)="showToolbar = false; playAllRandom()">Play All (Random)</ion-button>
+          <ion-button color="danger" size="small" (click)="stopPlayAllRandom()">Stop</ion-button>
+          <ion-button color="medium" size="small" (click)="showToolbar = false; nextPlayAllRandom()">Next</ion-button>
 
           <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
