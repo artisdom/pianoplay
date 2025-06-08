@@ -11,6 +11,7 @@
           <ion-button color="dark" size="small" [disabled]="running" (click)="fileInput.click()">{{'open'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPractice()">Start Learn</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPlay()">Listen</ion-button>
+          <ion-button color="warning" size="small" [disabled]="!running" (click)="togglePauseResume()">{{ isPaused ? 'Resume' : 'Pause' }}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
           <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>

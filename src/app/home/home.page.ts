@@ -142,6 +142,9 @@ export class HomePageComponent implements OnInit {
   // Any notes pressed are considered as the correct notes, so moving on the next note
   kidsMode = false;
 
+  // Pause state
+  isPaused = false;
+
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
@@ -375,7 +378,7 @@ export class HomePageComponent implements OnInit {
   // Move cursor to next note
   osmdCursorTempoMoveNext(): void {
     // Required to stop next calls if stop is pressed during play
-    if (!this.running) return;
+    if (!this.running || this.isPaused) return;
     if (!this.osmdEndReached(1)) this.osmdCursorMoveNext(1);
     let timeout = 0;
     // if ended reached check repeat and stat or stop
@@ -434,6 +437,7 @@ export class HomePageComponent implements OnInit {
 
   // Move cursor to next note
   osmdCursorPlayMoveNext(): void {
+    if (!this.running || this.isPaused) return;
     // Required to stop next calls if stop is pressed during play
     if (!this.running) return;
     // if ended reached check repeat and stat or stop
@@ -1215,5 +1219,18 @@ export class HomePageComponent implements OnInit {
   stopPlayAllRandom() {
     this.playAllRandomActive = false;
     this.osmdCursorStop();
+  }
+
+  togglePauseResume() {
+    if (!this.running) return;
+    this.isPaused = !this.isPaused;
+    if (!this.isPaused) {
+      // Resume playback
+      if (this.checkboxAutoplay) {
+        this.osmdCursorTempoMoveNext();
+      } else {
+        this.osmdCursorPlayMoveNext();
+      }
+    }
   }
 }
