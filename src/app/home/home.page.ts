@@ -139,6 +139,9 @@ export class HomePageComponent implements OnInit {
   private playAllRandomActive = false;
   private skipPlayAllRandom = false;
 
+  // Any notes pressed are considered as the correct notes, so moving on the next note
+  kidsMode = false;
+
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
@@ -822,11 +825,14 @@ export class HomePageComponent implements OnInit {
 
       this.sendMidiBle(midiData);
 
-      // Simulate input for all notes
-      for (let i = 0; i < pitches.length; i++) {
-        setTimeout(() => {
-          this.midiNoteOn(Date.now() - this.timePlayStart, pitches[i]);
-        }, 0);
+      // When in kids mode, the correct notes are played automatically, so don't simulate input to avoid create infinite loop
+      if (!this.kidsMode) {
+        // Simulate input for all notes
+        for (let i = 0; i < pitches.length; i++) {
+          setTimeout(() => {
+            this.midiNoteOn(Date.now() - this.timePlayStart, pitches[i]);
+          }, 0);
+        }
       }
       return;
     }
@@ -842,9 +848,12 @@ export class HomePageComponent implements OnInit {
         o.value.send([0x90, note, velocity], window.performance.now());
       }
 
-      setTimeout(() => {
-        this.midiNoteOn(Date.now() - this.timePlayStart, note);
-      }, 0);
+      // When in kids mode, the correct notes are played automatically, so don't simulate input to avoid create infinite loop
+      if (!this.kidsMode) {
+        setTimeout(() => {
+          this.midiNoteOn(Date.now() - this.timePlayStart, note);
+        }, 0);
+      }
 
       if (this.midiOutputs.values().next().done) {
         this.piano.keyDown({ midi: note });
@@ -897,17 +906,32 @@ export class HomePageComponent implements OnInit {
     this.notesService.press(name);
 
     // Key wrong pressed
-    if (!this.notesService.getMapRequired().has(name)) {
+    if (!this.notesService.getMapRequired().has(name) && !this.kidsMode) {
       this.osmdTextFeedback('&#x1F308;', 0, 20);
     }
 
     if (this.pianoKeyboard) this.pianoKeyboard.updateNotesStatus();
-    if (this.notesService.checkRequired()) {
+
+    // In kids mode, all notes pressed are considered as correct
+    if (this.kidsMode) {
+
+      // When in kids mode, all correct notes are played automatically
+      this.notesService.autoplayRequired(this.midiPressNote.bind(this), this.midiReleaseNote.bind(this));
 
       // All required notes has been pressed, turn off LED for all required notes
       this.turnOffAllRequiredLeds();
 
       this.osmdCursorPlayMoveNext();
+
+    } else {
+
+      if (this.notesService.checkRequired()) {
+
+        // All required notes has been pressed, turn off LED for all required notes
+        this.turnOffAllRequiredLeds();
+
+        this.osmdCursorPlayMoveNext();
+      }
     }
   }
 

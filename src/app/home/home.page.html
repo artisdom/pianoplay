@@ -26,6 +26,10 @@
           <ion-label color="dark">{{'upperStave'| translate}}</ion-label>
           <ion-checkbox disabled={{running}} [(ngModel)]="checkboxStaveDown" color="dark"></ion-checkbox>
           <ion-label color="dark">{{'lowerStave'| translate}}</ion-label>
+
+          <ion-checkbox [(ngModel)]="kidsMode" color="success"></ion-checkbox>
+          <ion-label color="success">Kids Mode</ion-label>
+
       </ion-row>
 
       <ion-row>
