@@ -9,14 +9,11 @@
           <ion-button color="primary" disabled={{running}} size="small" (click)="toggleShowScores()">{{'show'| translate}}</ion-button>
 
           <ion-button color="dark" size="small" [disabled]="running" (click)="fileInput.click()">{{'open'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPractice()">{{'start'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPlay()">{{'play'| translate}}</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPractice()">Start Learn</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPlay()">Listen</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
           <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>
-          <ion-button color="tertiary" size="small" (click)="showToolbar = false; playAllRandom()">Play All (Random)</ion-button>
-          <ion-button color="danger" size="small" (click)="stopPlayAllRandom()">Stop</ion-button>
-          <ion-button color="medium" size="small" (click)="showToolbar = false; nextPlayAllRandom()">Next</ion-button>
 
           <ion-checkbox (ionChange)="osmdColor($event.detail.checked)" color="dark" disabled={{running}} [checked]="true"></ion-checkbox>
           <ion-label color="dark">{{'color'| translate}}</ion-label>&nbsp;
@@ -30,6 +27,9 @@
           <ion-checkbox [(ngModel)]="kidsMode" color="success"></ion-checkbox>
           <ion-label color="success">Kids Mode</ion-label>
 
+          <ion-button color="tertiary" size="small" (click)="showToolbar = false; playAllRandom()">Play All (Random)</ion-button>
+          <ion-button color="danger" size="small" (click)="stopPlayAllRandom()">Stop Play All</ion-button>
+          <ion-button color="medium" size="small" (click)="showToolbar = false; nextPlayAllRandom()">Next</ion-button>
       </ion-row>
 
       <ion-row>
@@ -51,6 +51,7 @@
           <ion-label>{{'midi'| translate}}: {{midiDevice}}</ion-label>
           <ion-label *ngIf="!midiAvailable" color="danger"> <strong>{{'errorMidi'| translate}}</strong><br><br> </ion-label>
       </ion-row>
+
     </ion-grid>
 
   </ion-toolbar>
