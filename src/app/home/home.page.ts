@@ -5,6 +5,7 @@ import { IonContent, ModalController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { Piano } from '@tonejs/piano';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
+import { HttpClient } from '@angular/common/http';
 
 import { NotesService } from '../notes.service';
 import { PianoKeyboardComponent } from '../piano-keyboard/piano-keyboard.component';
@@ -131,11 +132,15 @@ export class HomePageComponent implements OnInit {
   // Toolbar visibility
   showToolbar: boolean = true;
 
+  // Shipped scores
+  shippedScores: string[] = [];
+
   constructor(
     private notesService: NotesService,
     private changeRef: ChangeDetectorRef,
     public translate: TranslateService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private http: HttpClient
   ) {
     // create the piano and load 1 velocity steps to reduce memory consumption
     this.piano = new Piano({
@@ -174,6 +179,27 @@ export class HomePageComponent implements OnInit {
     }
     window.onresize = () => (this.isMobileLayout = window.innerWidth <= 991);
     this.midiSetup();
+    this.loadShippedScores();
+  }
+
+  loadShippedScores() {
+    this.http.get<string[]>('assets/scores/list.json').subscribe({
+      next: (data) => {
+        this.shippedScores = data;
+        this.changeRef.detectChanges();
+      },
+      error: () => {
+        this.shippedScores = [];
+      }
+    });
+  }
+
+  getShippedScoreDisplayName(path: string): string {
+    // Extracts the filename without extension and group
+    const parts = path.split('/');
+    let name = parts[parts.length - 1];
+    name = name.replace(/\.(musicxml|mxl)$/i, '');
+    return name;
   }
 
   // GUI Language
@@ -1082,5 +1108,9 @@ export class HomePageComponent implements OnInit {
     if (notes.length > 0) {
       this.midiReleaseNote(notes);
     }
+  }
+
+  loadShippedScore(path: string) {
+    this.osmdLoadURL('assets/scores/' + path);
   }
 }
