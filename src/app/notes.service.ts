@@ -170,7 +170,7 @@ export class NotesService {
           notesToRelease.push(parseInt(key) + 12);
         }
         notesToPress.push(parseInt(key) + 12);
-        velocities.push(60); // Default velocity, or customize per note if needed
+        velocities.push(100); // Default velocity, or customize per note if needed, maximum 127.
       }
     }
     if (notesToRelease.length > 0) {

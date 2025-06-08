@@ -814,8 +814,8 @@ export class HomePageComponent implements OnInit {
 
   // Press note(s) on Output MIDI Device
   midiPressNote(pitches: number[], velocities: number[]): void {
-    // If no velocities provided, default to 60 for all notes
-    const vels = velocities && velocities.length === pitches.length ? velocities : pitches.map(() => 60);
+    // If no velocities provided, default to 100 for all notes, maximum is 127.
+    const vels = velocities && velocities.length === pitches.length ? velocities : pitches.map(() => 100);
 
     if (this.bleMidiConnected && pitches.length > 0) {
       // BLE batch: send all notes in one message
