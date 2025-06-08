@@ -1129,5 +1129,19 @@ export class HomePageComponent implements OnInit {
 
   loadShippedScore(path: string) {
     this.osmdLoadURL('assets/scores/' + path);
+
+    // scroll page to top
+    if (this.content) {
+      this.content.scrollToTop();
+    }
+  }
+
+  toggleShowScores() {
+    this.showScores = !this.showScores;
+
+    // scroll page to top
+    if (this.content) {
+      this.content.scrollToTop();
+    }
   }
 }

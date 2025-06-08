@@ -6,7 +6,7 @@
     <ion-grid>
       <ion-row>
 
-          <ion-button color="primary" disabled={{running}} size="small" (click)="showScores = !showScores">{{'show'| translate}}</ion-button>
+          <ion-button color="primary" disabled={{running}} size="small" (click)="toggleShowScores()">{{'show'| translate}}</ion-button>
 
           <ion-button color="dark" size="small" [disabled]="running" (click)="fileInput.click()">{{'open'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPractice()">{{'start'| translate}}</ion-button>
