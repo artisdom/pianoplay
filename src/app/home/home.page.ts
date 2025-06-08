@@ -292,9 +292,9 @@ export class HomePageComponent implements OnInit {
   }
 
   // Load selected file
-  osmdLoadFiles(files: Blob[]): void {
+  osmdLoadFiles(files: FileList | Blob[]): void {
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      const file = files[i] as File;
 
       const reader = new FileReader();
       reader.onload = (event: ProgressEvent<FileReader>) => {
@@ -307,6 +307,15 @@ export class HomePageComponent implements OnInit {
             this.fileLoadError = false;
             this.showScores = false;
             this.osmdReset();
+
+            // Set page title to file name (without extension)
+            if (file && file.name) {
+              const name = file.name.replace(/\.(musicxml|mxl)$/i, '');
+              document.title = name + ' - PianoPlay';
+            } else {
+              document.title = 'PianoPlay';
+            }
+
           },
           () => {
             this.fileLoaded = false;
@@ -329,6 +338,14 @@ export class HomePageComponent implements OnInit {
         this.fileLoadError = false;
         this.showScores = false;
         this.osmdReset();
+
+        // Set page title to file name (without extension)
+        const match = url.match(/([^/]+)\.(musicxml|mxl)$/i);
+        if (match) {
+          document.title = match[1] + ' - PianoPlay';
+        } else {
+          document.title = 'PianoPlay';
+        }
       },
       () => {
         this.fileLoaded = false;
