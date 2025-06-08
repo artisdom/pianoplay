@@ -824,7 +824,6 @@ export class HomePageComponent implements OnInit {
       for (let i = 0; i < pitches.length; i++) {
         midiData.push(pitches[i], vels[i]);
         this.mapNotesAutoPressed.set((pitches[i] - 12).toFixed(), 1);
-        this.piano.keyDown({ midi: pitches[i] });
       }
 
       this.sendMidiBle(midiData);
@@ -859,6 +858,9 @@ export class HomePageComponent implements OnInit {
         }, 0);
       }
 
+      // .next() retrieves the first result from that iterator.
+      // If the done property is true, it means there are no MIDI outputs available.
+      // when no MIDI outputs available, simulate key press on virtual piano
       if (this.midiOutputs.values().next().done) {
         this.piano.keyDown({ midi: note });
       }
@@ -873,7 +875,6 @@ export class HomePageComponent implements OnInit {
       for (const note of pitch) {
         midiData.push(note, 0x00);
         this.mapNotesAutoPressed.delete((note - 12).toFixed());
-        this.piano.keyUp({ midi: note });
       }
       this.sendMidiBle(midiData);
       // Simulate input for all notes
@@ -898,6 +899,7 @@ export class HomePageComponent implements OnInit {
         this.midiNoteOff(Date.now() - this.timePlayStart, note);
       }, 0);
 
+      // when no MIDI outputs available, simulate key release on virtual piano
       if (this.midiOutputs.values().next().done) this.piano.keyUp({ midi: note });
     }
   }
