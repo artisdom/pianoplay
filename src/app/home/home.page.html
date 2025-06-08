@@ -21,18 +21,23 @@
           <ion-label color="dark">{{'upperStave'| translate}}</ion-label>
           <ion-checkbox disabled={{running}} [(ngModel)]="checkboxStaveDown" color="dark"></ion-checkbox>
           <ion-label color="dark">{{'lowerStave'| translate}}</ion-label>
+      </ion-row>
+
+      <ion-row>
+          <img src="assets/icon/metronome.svg" style="width:48px;height:48px;">
+          <ion-input [(ngModel)]="speedText" (change)="updateSpeed($event.target.value)"></ion-input>
+
+          <img src="assets/icon/magnify-scan.svg" style="width:48px;height:48px;">
+          <ion-input [(ngModel)]="zoomText" (change)="updateZoom($event.target.value)"></ion-input>
 
           <img  src="assets/icon/music-box-multiple-outline.svg" style="width:48px;height:48px;">
           <ion-input [(ngModel)]="inputMeasure.lower" (change)="updateLowerMeasure($event.target.value)"></ion-input>
           <ion-input [(ngModel)]="inputMeasure.upper" (change)="updateUpperMeasure($event.target.value)"></ion-input>
+
           <img src="assets/icon/repeat-off.svg" style="width:48px;height:48px;" [hidden]="repeatValue!==0">
           <img src="assets/icon/repeat-once.svg" style="width:48px;height:48px;" [hidden]="repeatValue!==1">
           <img src="assets/icon/repeat.svg" style="width:48px;height:48px;" [hidden]="repeatValue < 2">
           <ion-input [(ngModel)]="repeatText" (change)="updateRepeat($event.target.value)"></ion-input>
-          <img src="assets/icon/magnify-scan.svg" style="width:48px;height:48px;">
-          <ion-input [(ngModel)]="zoomText" (change)="updateZoom($event.target.value)"></ion-input>
-          <img src="assets/icon/metronome.svg" style="width:48px;height:48px;">
-          <ion-input [(ngModel)]="speedText" (change)="updateSpeed($event.target.value)"></ion-input>
 
           <ion-label>{{'midi'| translate}}: {{midiDevice}}</ion-label>
       </ion-row>
