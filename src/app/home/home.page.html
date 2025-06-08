@@ -64,10 +64,10 @@
   </div>
 
   <div *ngIf="showScores" style="margin: 5%;">
-    <ion-button color="warning" size="small" (click)="osmdLoadURL('assets/scores/October_Autumn_Song_from_Tchaikovskys_The_Seasons.mxl')">October</ion-button>
-    <ion-button color="warning" size="small" (click)="osmdLoadURL('assets/scores/Opus_27_No_2_Moonlight_Sonata_1st_movement.mxl')">Moonlight Sonata</ion-button>
-    <ion-button color="warning" size="small" (click)="osmdLoadURL('assets/scores/Passacaglia.mxl')">Passacaglia</ion-button>
-    <ion-button color="warning" size="small" (click)="osmdLoadURL('assets/scores/Prlude_No._4_in_E_Minor_Op._28_-_Frdric_Chopin.mxl')">Prelude in E Minor</ion-button>
+    <ion-button color="warning" size="small" (click)="loadShippedScore('October_Autumn_Song_from_Tchaikovskys_The_Seasons.mxl')">October</ion-button>
+    <ion-button color="warning" size="small" (click)="loadShippedScore('Opus_27_No_2_Moonlight_Sonata_1st_movement.mxl')">Moonlight Sonata</ion-button>
+    <ion-button color="warning" size="small" (click)="loadShippedScore('Passacaglia.mxl')">Passacaglia</ion-button>
+    <ion-button color="warning" size="small" (click)="loadShippedScore('Prlude_No._4_in_E_Minor_Op._28_-_Frdric_Chopin.mxl')">Prelude in E Minor</ion-button>
 
     <ng-container *ngIf="shippedScores.length; else loadingOrEmpty">
       <ion-button color='warning' size="small" *ngFor="let score of shippedScores" (click)="loadShippedScore(score)">
