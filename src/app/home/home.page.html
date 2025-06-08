@@ -6,9 +6,11 @@
     <ion-grid>
       <ion-row>
 
+          <ion-button color="primary" disabled={{running}} size="small" (click)="showScores = !showScores">{{'show'| translate}}</ion-button>
+
           <ion-button color="dark" size="small" [disabled]="running" (click)="fileInput.click()">{{'open'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; osmdPractice()">{{'start'| translate}}</ion-button>
-          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; osmdPlay()">{{'play'| translate}}</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPractice()">{{'start'| translate}}</ion-button>
+          <ion-button color="dark" disabled={{!fileLoaded||running}} size="small" (click)="showToolbar = false; showScores = false; osmdPlay()">{{'play'| translate}}</ion-button>
           <ion-button color="dark" disabled={{!running}} size="small" (click)="osmdCursorStop()">{{'stop'| translate}}</ion-button>
           <ion-button color="primary" size="small" (click)="openShippedScoreSelector()">{{'openShippedScore'| translate}}</ion-button>
           <ion-button color="secondary" size="small" (click)="connectBleMidi()">Connect BLE MIDI</ion-button>
@@ -53,7 +55,7 @@
   <span *ngIf="showToolbar" style="color:#888;font-size:12px;">▲ Hide Toolbar</span>
 </div>
 
-<ion-content [fullscreen]="false">
+<ion-content [fullscreen]="true">
 
   <div style="margin: 5%;">
     <ion-label *ngIf="fileLoadError" color="danger">
@@ -61,7 +63,7 @@
     </ion-label>
   </div>
 
-  <div *ngIf="!fileLoaded" style="margin: 5%;">
+  <div *ngIf="showScores" style="margin: 5%;">
 
     <ion-button color="dark" size="small" (click)="osmdLoadURL('assets/scores/October_Autumn_Song_from_Tchaikovskys_The_Seasons.mxl')">October</ion-button>
     <ion-button color="dark" size="small" (click)="osmdLoadURL('assets/scores/Opus_27_No_2_Moonlight_Sonata_1st_movement.mxl')">Moonlight Sonata</ion-button>

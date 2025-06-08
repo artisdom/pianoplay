@@ -81,6 +81,7 @@ export class HomePageComponent implements OnInit {
   checkboxAutoplay: boolean = false;
   fileLoadError: boolean = false;
   fileLoaded: boolean = false;
+  showScores: boolean = true;
   running: boolean = false;
   checkboxColor: boolean = true;
   checkboxKeyboard: boolean = true;
@@ -278,6 +279,7 @@ export class HomePageComponent implements OnInit {
             this.openSheetMusicDisplay.render();
             this.fileLoaded = true;
             this.fileLoadError = false;
+            this.showScores = false;
             this.osmdReset();
           },
           () => {
@@ -299,6 +301,7 @@ export class HomePageComponent implements OnInit {
         this.openSheetMusicDisplay.render();
         this.fileLoaded = true;
         this.fileLoadError = false;
+        this.showScores = false;
         this.osmdReset();
       },
       () => {
