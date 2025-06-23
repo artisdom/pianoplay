@@ -745,8 +745,9 @@ export class HomePageComponent implements OnInit {
   // Shared function to turn on LED for all newly required notes
   private turnOnAllRequiredLeds(): void {
     if (this.bleMidiConnected) {
+      /*
       // Collect all required notes and send as a single BLE message
-      const keys = Array.from(this.notesService.getMapRequired().keys()).map(([key]) => parseInt(key) + 12);
+      const keys = Array.from(this.notesService.getMapRequiredValue0().keys()).map(([key]) => parseInt(key) + 12);
       if (keys.length > 0) {
         const midiData: number[] = [0x90];
 
@@ -754,6 +755,12 @@ export class HomePageComponent implements OnInit {
         for (const note of keys) {
           midiData.push(note, 1);
         }
+        this.sendMidiBle(midiData);
+      }
+      */
+      for (const [key] of this.notesService.getMapRequiredValue0()) {
+        const midiData: number[] = [0x90];
+        midiData.push(parseInt(key) + 12, 1);
         this.sendMidiBle(midiData);
       }
     } else { // Turn on all required notes via USB MIDI connection
